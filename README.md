@@ -13,6 +13,7 @@ $ bundle install
 
 ```
 $ ruby lib/cal.rb "Name of Calendar" 2013 9
+$ ruby lib/cal.rb "Name of Calendar" 2013 9 4
 ```
 
 ## Test

@@ -57,7 +57,7 @@ class Event
     if @rec
       raise "Only WKST MO is supported but #{@rec['WKST']} was given: #{summary}" if @rec['WKST'] && @rec['WKST'] != 'MO'
       raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{summary}" if @rec['FREQ'] != 'WEEKLY'
-      raise "UNTIL is not supported: #{summary}" if @rec['UNTIL']
+      raise "UNTIL is not supported but #{@rec['UNTIL']} was given: #{summary}" if @rec['UNTIL']
     end
   end
 
@@ -141,20 +141,44 @@ class Event
   end
 end
 
-if __FILE__ == $0
-  calendar_name = ARGV[0]
-  date_args = ARGV[1..2].map(&:to_i)
-  month = Date.new(*date_args)
+class Reporter
+  def initialize(cal)
+    @cal = cal
+  end
 
-  ical = Appscript.app('iCal')
-  cal = Calendar.new(ical.calendars[calendar_name])
+  def report_month(month)
+    (month..(month.end_of_month)).each do |date|
+      report_date(date)
+    end
+  end
 
-  (month..(month.end_of_month)).each do |date|
-    events = cal.events_in_date(date)
+  def report_date(date)
+    events = @cal.events_in_date(date)
 
     puts "#{date}: #{events.inject(0) { |sum, event| sum + event.duration_in_hours }} hours"
     events.each do |event|
       puts "  #{event.start_time} - #{event.end_time}: #{event.summary}"
     end
+  end
+end
+
+if __FILE__ == $0
+  calendar_name = ARGV[0]
+
+  ical = Appscript.app('iCal')
+  cal = Calendar.new(ical.calendars[calendar_name])
+  reporter = Reporter.new(cal)
+
+  case ARGV.length
+  when 3 then
+    month_args = ARGV[1..2].map(&:to_i)
+    reporter.report_month(Date.new(*month_args))
+  when 4 then
+    date_args = ARGV[1..3].map(&:to_i)
+    reporter.report_date(Date.new(*date_args))
+  else
+    puts 'Specify Calendar name and month or date.'
+    puts 'Example for month : ruby lib/cal.rb Hello 2013 9'
+    puts 'Example for date  : ruby lib/cal.rb Hello 2013 9 4'
   end
 end
