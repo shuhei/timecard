@@ -13,9 +13,6 @@ class Container
   end
 end
 
-describe Calendar do
-end
-
 describe Event do
   let(:event_obj) { double() }
   let(:reccurence_str) { :missing_value }
