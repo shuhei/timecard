@@ -45,7 +45,7 @@ describe Event do
     end
 
     context 'with recurrence' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TU,TH;WKST=MO' }
+      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TU,TH;WKST=MO;UNTIL=20130905T145959Z' }
       it 'parses recurrence string' do
         expect(subject.rec['FREQ']).to eq('WEEKLY')
         expect(subject.rec['WKST']).to eq('MO')
@@ -57,6 +57,10 @@ describe Event do
 
       it 'converts interval to array' do
         expect(subject.rec['BYDAY']).to eq(['MO', 'TU', 'TH'])
+      end
+
+      it 'converts interval to time' do
+        expect(subject.rec['UNTIL']).to eq(Time.new(2013, 9, 5, 23, 59, 59))
       end
     end
   end
@@ -74,7 +78,7 @@ describe Event do
     let(:end_date) { Time.new(2013, 9, 4, 12) }
 
     context 'with weekly event' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1' }
+      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1;UNTIL=20130918T145959Z' }
 
       it 'returns true for the starting date' do
         expect(subject.check_recurrent(date)).to be_true
@@ -86,6 +90,14 @@ describe Event do
 
       it 'returns false for 1 week ago' do
         expect(subject.check_recurrent(date - 1.week)).to be_false
+      end
+
+      it 'returns true for day of UNTIL' do
+        expect(subject.check_recurrent(date + 2.week)).to be_true
+      end
+
+      it 'returns false for day after UNTIL' do
+        expect(subject.check_recurrent(date + 3.week)).to be_false
       end
     end
 

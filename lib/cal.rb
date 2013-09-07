@@ -57,7 +57,6 @@ class Event
     if @rec
       raise "Only WKST MO is supported but #{@rec['WKST']} was given: #{summary}" if @rec['WKST'] && @rec['WKST'] != 'MO'
       raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{summary}" if @rec['FREQ'] != 'WEEKLY'
-      raise "UNTIL is not supported but #{@rec['UNTIL']} was given: #{summary}" if @rec['UNTIL']
     end
   end
 
@@ -71,7 +70,12 @@ class Event
   end
 
   def in_range?(date)
-    start_date <= date
+    is_started = start_date <= date
+    if @rec['UNTIL']
+      is_started && date <= @rec['UNTIL']
+    else
+      is_started
+    end
   end
 
   def happen_in_week?(date)
@@ -111,6 +115,7 @@ class Event
       k, v = compo.split('=')
       v = v.to_i if k == 'INTERVAL'
       v = v.split(',') if k == 'BYDAY'
+      v = Time.parse(v).getlocal if k == 'UNTIL'
       [k, v]
     end
     Hash[*(kvs.flatten(1))]
