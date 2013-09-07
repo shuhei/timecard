@@ -1,6 +1,7 @@
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'cal'
+require 'active_support/time'
 
 class Container
   def initialize(content)

@@ -1,5 +1,5 @@
 require 'appscript'
-require 'active_support/all'
+require 'active_support/time'
 
 class Calendar
   def initialize(obj)
@@ -7,7 +7,8 @@ class Calendar
   end
 
   def events_in_date(date)
-    one_time_events_in_date(date) + recurrent_events_in_date(date)
+    events = one_time_events_in_date(date) + recurrent_events_in_date(date)
+    events.sort_by(&:start_time)
   end
 
   def one_time_events_in_date(date)
@@ -54,8 +55,9 @@ class Event
     @rec = parse_recurrence(rec_str) unless rec_str == :missing_value
 
     if @rec
-      raise "Only WKST MO is supported but #{@rec['WKST']} was given" if @rec['WKST'] && @rec['WKST'] != 'MO'
-      raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given" if @rec['FREQ'] != 'WEEKLY'
+      raise "Only WKST MO is supported but #{@rec['WKST']} was given: #{summary}" if @rec['WKST'] && @rec['WKST'] != 'MO'
+      raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{summary}" if @rec['FREQ'] != 'WEEKLY'
+      raise "UNTIL is not supported: #{summary}" if @rec['UNTIL']
     end
   end
 
@@ -68,7 +70,7 @@ class Event
     end
   end
 
-  def in_recurrence?(date)
+  def in_range?(date)
     start_date <= date
   end
 
@@ -95,7 +97,7 @@ class Event
   # Returns nil otherwise.
   def recurrent_range_in_date(date)
     raise 'Not recurrent event' unless recurrent?
-    return nil unless in_recurrence?(date)
+    return nil unless in_range?(date)
     return nil unless happen_in_week?(date)
     return nil unless happen_in_day_of_the_week?(date)
 
@@ -118,6 +120,18 @@ class Event
     @rec != nil
   end
 
+  def duration_in_hours
+    (end_date - start_date) / (60 * 60)
+  end
+
+  def start_time
+    start_date.strftime('%H:%M')
+  end
+
+  def end_time
+    end_date.strftime('%H:%M')
+  end
+
   def method_missing(method_name, *args, &block)
     if @obj.respond_to?(method_name)
       @obj.send(method_name).get
@@ -129,10 +143,18 @@ end
 
 if __FILE__ == $0
   calendar_name = ARGV[0]
-  date_args = ARGV[1..3].map(&:to_i)
+  date_args = ARGV[1..2].map(&:to_i)
+  month = Date.new(*date_args)
 
   ical = Appscript.app('iCal')
   cal = Calendar.new(ical.calendars[calendar_name])
-  date = Date.new(*date_args)
-  puts cal.events_in_date(date).map(&:summary)
+
+  (month..(month.end_of_month)).each do |date|
+    events = cal.events_in_date(date)
+
+    puts "#{date}: #{events.inject(0) { |sum, event| sum + event.duration_in_hours }} hours"
+    events.each do |event|
+      puts "  #{event.start_time} - #{event.end_time}: #{event.summary}"
+    end
+  end
 end
