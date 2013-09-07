@@ -1,18 +1,24 @@
-# Cal Hours
+# Timecard
 
-Generates event summaries of OS X Calendar app.
+Generate event summaries from OS X Calendar app.
 
 ## Installation
 
 ```
-git clone $THIS_REPO
-bundle install
+$ git clone $THIS_REPO
+$ bundle install
 ```
 
 ## Usage
 
 ```
-ruby lib/cal.rb "Name of Calendar" 2013 9
+$ ruby lib/cal.rb "Name of Calendar" 2013 9
+```
+
+## Test
+
+```
+$ rspec
 ```
 
 ## TODO
