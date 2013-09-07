@@ -45,6 +45,8 @@ end
 class Event
   DAYS_IN_THE_WEEK = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
 
+  attr_reader :rec
+
   def initialize(obj)
     @obj = obj
 
