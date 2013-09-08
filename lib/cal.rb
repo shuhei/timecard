@@ -41,6 +41,10 @@ class Calendar
   def recurrent
     Appscript.its.recurrence.contains('INTERVAL')
   end
+
+  def title
+    @obj.title.get
+  end
 end
 
 class Event
@@ -193,5 +197,15 @@ class Reporter
     events.each do |event|
       puts "  #{event.start_time} - #{event.end_time}: #{event.summary}"
     end
+  end
+
+  def csv_month(month)
+    daily_sums = (month..(month.end_of_month)).map do |date|
+      events = @cal.events_in_date(date)
+      sum = events.inject(0) { |sum, event| sum + event.duration_in_hours }
+      sum == 0 ? '' : sum
+    end
+    print "#{@cal.title},"
+    puts daily_sums.join(',')
   end
 end

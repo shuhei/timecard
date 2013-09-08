@@ -9,4 +9,3 @@ group :development, :test do
   gem 'guard-rspec'
   gem 'terminal-notifier-guard'
 end
-

@@ -24,5 +24,18 @@ namespace :report do
   task :daily, :calendar_name, :date do |t, args|
     setup_reporter(args[:calendar_name]).report_date(Date.parse(args[:date]))
   end
-end
 
+  desc 'Ouyput monthly matrix'
+  task :matrix, :month do |t, args|
+    month = Date.parse(args[:month])
+    print 'Calendar,'
+    puts (month..(month.end_of_month)).map { |date| date.strftime('%m-%d') }.join(',')
+
+    ical = Appscript.app('iCal')
+    ical.calendars.get.each do |cal_obj|
+      cal = Calendar.new(cal_obj)
+      reporter = Reporter.new(cal)
+      reporter.csv_month(month)
+    end
+  end
+end
