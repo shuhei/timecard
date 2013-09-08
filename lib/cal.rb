@@ -28,13 +28,13 @@ class Calendar
 
   def in_day(date)
     start_cond = Appscript.its.start_date.ge(date.beginning_of_day)
-    end_cond = Appscript.its.end_date.lt(date.end_of_day)
+    end_cond = Appscript.its.end_date.lt((date + 1).beginning_of_day)
     start_cond.and(end_cond)
   end
 
   def not_in_day(date)
     start_cond = Appscript.its.start_date.lt(date.beginning_of_day)
-    end_cond = Appscript.its.end_date.ge(date.end_of_day)
+    end_cond = Appscript.its.end_date.ge((date + 1).beginning_of_day)
     start_cond.or(end_cond)
   end
 
@@ -54,23 +54,29 @@ class Event
     rec_str = @obj.recurrence.get
     @rec = parse_recurrence(rec_str) unless rec_str == :missing_value
 
+    raise "Overnight event is not supported: #{summary}" if overnight?
+
     if @rec
       raise "Only WKST MO is supported but #{@rec['WKST']} was given: #{summary}" if @rec['WKST'] && @rec['WKST'] != 'MO'
-      raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{summary}" if @rec['FREQ'] != 'WEEKLY'
+      raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{summary}" unless ['DAILY', 'WEEKLY'].include?(@rec['FREQ'])
     end
+  end
+
+  def overnight?
+    !(start_date.to_date == end_date.to_date || end_date == (start_date + 1.day).beginning_of_day)
   end
 
   def check_recurrent(date)
     range = recurrent_range_in_date(date)
     if range
-      date.beginning_of_day <= range.min && range.max < date.end_of_day
+      date.beginning_of_day <= range.min && range.max <= (date + 1).beginning_of_day
     else
       false
     end
   end
 
   def in_range?(date)
-    is_started = start_date <= date
+    is_started = start_date.to_date <= date
     if @rec['UNTIL']
       is_started && date <= @rec['UNTIL']
     else
@@ -78,6 +84,7 @@ class Event
     end
   end
 
+  # Check interval of weekly event.
   def happen_in_week?(date)
     if @rec['INTERVAL'] > 1
       # TODO: Use WKST. beginning_of_week= would be useful.
@@ -88,6 +95,7 @@ class Event
     end
   end
 
+  # Check day of the week.
   def happen_in_day_of_the_week?(date)
     byday = @rec['BYDAY']
     if byday
@@ -97,14 +105,35 @@ class Event
     end
   end
 
+  # Check interval of daily event.
+  def happen_in_day?(date)
+    if @rec['INTERVAL'] > 1
+      date_diff = (date - start_date.to_date)
+      date_diff % @rec['INTERVAL'] == 0
+    else
+      true
+    end
+  end
+
   # Returns time range on the date if the recurrent event happens on the date.
   # Returns nil otherwise.
   def recurrent_range_in_date(date)
     raise 'Not recurrent event' unless recurrent?
-    return nil unless in_range?(date)
-    return nil unless happen_in_week?(date)
-    return nil unless happen_in_day_of_the_week?(date)
 
+    # Check if it matches the date
+    return nil unless in_range?(date)
+
+    case @rec['FREQ']
+    when 'WEEKLY' then
+      return nil unless happen_in_week?(date)
+      return nil unless happen_in_day_of_the_week?(date)
+    when 'DAILY' then
+      return nil unless happen_in_day?(date)
+    else
+      raise "Not supported FREQ: #{@rec['FREQ']}"
+    end
+
+    # Check if it matches the time in the day
     adjusted_start_date = date.beginning_of_day + (start_date - start_date.beginning_of_day)
     adjusted_end_date = adjusted_start_date + (end_date - start_date)
     (adjusted_start_date..adjusted_end_date)
@@ -115,7 +144,7 @@ class Event
       k, v = compo.split('=')
       v = v.to_i if k == 'INTERVAL'
       v = v.split(',') if k == 'BYDAY'
-      v = Time.parse(v).getlocal if k == 'UNTIL'
+      v = Time.parse(v).getlocal.to_date if k == 'UNTIL'
       [k, v]
     end
     Hash[*(kvs.flatten(1))]

@@ -24,9 +24,8 @@ $ rspec
 
 ## TODO
 
-- Support daily recurrence
 - Support monthly recurrence
 - Support yearly recurrence
 - Generate hours matrix for multiple calendars
 - Load calendar config
-- Handle multiple-days events
+- Handle overnight events

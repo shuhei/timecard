@@ -16,11 +16,13 @@ end
 describe Event do
   let(:event_obj) { double() }
   let(:reccurence_str) { :missing_value }
-  let(:start_date) { Time.now }
-  let(:end_date) { Time.now }
+  let(:start_date) { Time.new(2013, 9, 4, 9) }
+  let(:end_date) { Time.new(2013, 9, 4, 12) }
+  let(:summary) { 'Test Event' }
   subject { described_class.new(event_obj) }
 
   before do
+    allow(event_obj).to receive(:summary).and_return(Container.new(summary))
     allow(event_obj).to receive(:recurrence).and_return(Container.new(reccurence_str))
     allow(event_obj).to receive(:start_date).and_return(Container.new(start_date))
     allow(event_obj).to receive(:end_date).and_return(Container.new(end_date))
@@ -55,12 +57,12 @@ describe Event do
         expect(subject.rec['INTERVAL']).to eq(2)
       end
 
-      it 'converts interval to array' do
+      it 'converts byday to array' do
         expect(subject.rec['BYDAY']).to eq(['MO', 'TU', 'TH'])
       end
 
-      it 'converts interval to time' do
-        expect(subject.rec['UNTIL']).to eq(Time.new(2013, 9, 5, 23, 59, 59))
+      it 'converts UNTIL to date' do
+        expect(subject.rec['UNTIL']).to eq(Date.new(2013, 9, 5))
       end
     end
   end
@@ -74,8 +76,50 @@ describe Event do
 
   describe '#check_recurrent' do
     let(:date) { Date.new(2013, 9, 4) } # Wed
-    let(:start_date) { Time.new(2013, 9, 4, 9) }
-    let(:end_date) { Time.new(2013, 9, 4, 12) }
+
+    context 'with daily event' do
+      let(:reccurence_str) { 'FREQ=DAILY;INTERVAL=1;UNTIL=20130918T145959Z' }
+
+      it 'returns true for the starting date' do
+        expect(subject.check_recurrent(date)).to be_true
+      end
+
+      it 'returns true for the next day' do
+        expect(subject.check_recurrent(date + 1.day)).to be_true
+      end
+
+      it 'returns true for day of UNTIL' do
+        expect(subject.check_recurrent(date + 2.weeks)).to be_true
+      end
+
+      it 'returns false for day after UNTIL' do
+        expect(subject.check_recurrent(date + 2.weeks + 1.day)).to be_false
+      end
+    end
+
+    context 'with every-three-days event' do
+      let(:reccurence_str) { 'FREQ=DAILY;INTERVAL=3;UNTIL=20130919T145959Z' }
+
+      it 'returns true for the starting date' do
+        expect(subject.check_recurrent(date)).to be_true
+      end
+
+      it 'returns false for the next day' do
+        expect(subject.check_recurrent(date + 1.day)).to be_false
+      end
+
+      it 'returns true for 3 days later' do
+        expect(subject.check_recurrent(date + 3.day)).to be_true
+      end
+
+      it 'returns true for day of UNTIL' do
+        expect(subject.check_recurrent(date + 2.weeks + 1.day)).to be_true
+      end
+
+      it 'returns false for day after UNTIL' do
+        expect(subject.check_recurrent(date + 2.weeks + 4.day)).to be_false
+      end
+    end
 
     context 'with weekly event' do
       let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1;UNTIL=20130918T145959Z' }
@@ -93,11 +137,36 @@ describe Event do
       end
 
       it 'returns true for day of UNTIL' do
-        expect(subject.check_recurrent(date + 2.week)).to be_true
+        expect(subject.check_recurrent(date + 2.weeks)).to be_true
       end
 
       it 'returns false for day after UNTIL' do
-        expect(subject.check_recurrent(date + 3.week)).to be_false
+        expect(subject.check_recurrent(date + 3.weeks)).to be_false
+      end
+    end
+
+    context 'with weekly event that ends at the midnight' do
+      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1;UNTIL=20130918T145959Z' }
+      let(:end_date) { Time.new(2013, 9, 5, 0, 0, 0) }
+
+      it 'returns true for the starting date' do
+        expect(subject.check_recurrent(date)).to be_true
+      end
+
+      it 'returns true for 1 week later' do
+        expect(subject.check_recurrent(date + 1.week)).to be_true
+      end
+
+      it 'returns false for 1 week ago' do
+        expect(subject.check_recurrent(date - 1.week)).to be_false
+      end
+
+      it 'returns true for day of UNTIL' do
+        expect(subject.check_recurrent(date + 2.weeks)).to be_true
+      end
+
+      it 'returns false for day after UNTIL' do
+        expect(subject.check_recurrent(date + 3.weeks)).to be_false
       end
     end
 
@@ -148,6 +217,26 @@ describe Event do
 
       it 'returns false for 2 weeks ago' do
         expect(subject.check_recurrent(date - 2.weeks)).to be_false
+      end
+    end
+  end
+
+  describe 'not supported events' do
+    describe 'check overnight event' do
+      context 'with another end_date' do
+        let(:end_date) { start_date + 1.day }
+
+        it 'raises an error' do
+          expect { subject }.to raise_error
+        end
+      end
+
+      context 'with midnight end_date' do
+        let(:end_date) { (start_date + 1.day).beginning_of_day }
+
+        it 'does not raise error' do
+          expect { subject }.not_to raise_error
+        end
       end
     end
   end
