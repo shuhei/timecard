@@ -12,8 +12,8 @@ $ bundle install
 ## Usage
 
 ```
-$ ruby lib/cal.rb "Name of Calendar" 2013 9
-$ ruby lib/cal.rb "Name of Calendar" 2013 9 4
+$ rake report:monthly[Name of Calendar,2013/9]
+$ rake report:daily[Name of Calendar,2013/9/4]
 ```
 
 ## Test

@@ -195,24 +195,3 @@ class Reporter
     end
   end
 end
-
-if __FILE__ == $0
-  calendar_name = ARGV[0]
-
-  ical = Appscript.app('iCal')
-  cal = Calendar.new(ical.calendars[calendar_name])
-  reporter = Reporter.new(cal)
-
-  case ARGV.length
-  when 3 then
-    month_args = ARGV[1..2].map(&:to_i)
-    reporter.report_month(Date.new(*month_args))
-  when 4 then
-    date_args = ARGV[1..3].map(&:to_i)
-    reporter.report_date(Date.new(*date_args))
-  else
-    puts 'Specify Calendar name and month or date.'
-    puts 'Example for month : ruby lib/cal.rb Hello 2013 9'
-    puts 'Example for date  : ruby lib/cal.rb Hello 2013 9 4'
-  end
-end

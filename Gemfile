@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 
+gem 'rake'
 gem 'rb-appscript'
 gem 'activesupport', '~>4.0.0'
 
