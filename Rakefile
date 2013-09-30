@@ -34,22 +34,22 @@ namespace :report do
   desc 'Output monthly matrix'
   task :matrix, :month do |t, args|
     month = Date.parse(args[:month])
-    print 'Calendar,'
-    puts (month..(month.end_of_month)).map { |date| date.strftime('%m-%d') }.join(',')
+    print "Calendar\t"
+    puts (month..(month.end_of_month)).map { |date| date.strftime('%m-%d') }.join("\t")
 
     config = load_config
     config.map do |label, cals|
       rows = cals.map do |cal_name|
         reporter = setup_reporter(cal_name)
-        reporter.csv_month(month)
+        reporter.days_in_month(month)
       end
       summary = rows.inject([0] * month.end_of_month.day) do |sum, row|
         sum.zip(row).map do |pair|
           pair[0] + pair[1]
         end
       end
-      print "#{label},"
-      puts summary.join(',')
+      print "\"#{label}\"\t"
+      puts summary.join("\t")
     end
   end
 end

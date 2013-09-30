@@ -209,7 +209,7 @@ class Reporter
     end
   end
 
-  def csv_month(month)
+  def days_in_month(month)
     (month..(month.end_of_month)).map do |date|
       events = @cal.events_in_date(date)
       sum = events.inject(0) { |sum, event| sum + event.duration_in_hours }
