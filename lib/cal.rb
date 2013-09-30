@@ -49,6 +49,15 @@ end
 
 class Event
   DAYS_IN_THE_WEEK = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
+  DAY_SYMBOLS = {
+    'SU' => :sunday,
+    'MO' => :monday,
+    'TU' => :tuesday,
+    'WE' => :wedenesday,
+    'TH' => :thursday,
+    'FR' => :friday,
+    'SA' => :saturday
+  }
 
   attr_reader :rec
 
@@ -58,10 +67,12 @@ class Event
     rec_str = @obj.recurrence.get
     @rec = parse_recurrence(rec_str) unless rec_str == :missing_value
 
+    @week_start = Date.beginning_of_week
+
     raise "Overnight event is not supported: #{summary}" if overnight?
 
     if @rec
-      raise "Only WKST MO is supported but #{@rec['WKST']} was given: #{summary}" if @rec['WKST'] && @rec['WKST'] != 'MO'
+      @week_start = DAY_SYMBOLS[@rec['WKST']] if DAY_SYMBOLS.has_key?(@rec['WKST'])
       raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{summary}" unless ['DAILY', 'WEEKLY'].include?(@rec['FREQ'])
     end
   end
@@ -91,8 +102,7 @@ class Event
   # Check interval of weekly event.
   def happen_in_week?(date)
     if @rec['INTERVAL'] > 1
-      # TODO: Use WKST. beginning_of_week= would be useful.
-      week_diff = (date.beginning_of_week - start_date.beginning_of_week.to_date) / 7
+      week_diff = (date.beginning_of_week(@week_start) - start_date.beginning_of_week(@week_start).to_date) / 7
       week_diff % @rec['INTERVAL'] == 0
     else
       true
