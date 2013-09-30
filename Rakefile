@@ -47,7 +47,10 @@ namespace :report do
         sum.zip(row).map do |pair|
           pair[0] + pair[1]
         end
+      end.map do |hours|
+        hours == 0 ? '' : hours.to_s
       end
+
       print "\"#{label}\"\t"
       puts summary.join("\t")
     end
