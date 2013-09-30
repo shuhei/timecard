@@ -200,12 +200,9 @@ class Reporter
   end
 
   def csv_month(month)
-    daily_sums = (month..(month.end_of_month)).map do |date|
+    (month..(month.end_of_month)).map do |date|
       events = @cal.events_in_date(date)
       sum = events.inject(0) { |sum, event| sum + event.duration_in_hours }
-      sum == 0 ? '' : sum
     end
-    print "#{@cal.title},"
-    puts daily_sums.join(',')
   end
 end

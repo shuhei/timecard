@@ -28,5 +28,4 @@ $ rspec
 
 - Support monthly recurrence
 - Support yearly recurrence
-- Load calendar config
 - Handle overnight events

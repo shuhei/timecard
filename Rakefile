@@ -1,5 +1,6 @@
 require 'rspec/core/rake_task'
 require 'active_support/time'
+require 'yaml'
 require './lib/cal'
 
 RSpec::Core::RakeTask.new(:spec) do |spec|
@@ -15,6 +16,11 @@ namespace :report do
     reporter = Reporter.new(cal)
   end
 
+  def load_config
+    config_path = File.join(File.dirname(__FILE__), 'config.yml')
+    YAML::load(File.read(config_path))
+  end
+
   desc 'Output monthly report'
   task :monthly, :calendar_name, :month do |t, args|
     setup_reporter(args[:calendar_name]).report_month(Date.parse(args[:month]))
@@ -25,17 +31,25 @@ namespace :report do
     setup_reporter(args[:calendar_name]).report_date(Date.parse(args[:date]))
   end
 
-  desc 'Ouyput monthly matrix'
+  desc 'Output monthly matrix'
   task :matrix, :month do |t, args|
     month = Date.parse(args[:month])
     print 'Calendar,'
     puts (month..(month.end_of_month)).map { |date| date.strftime('%m-%d') }.join(',')
 
-    ical = Appscript.app('iCal')
-    ical.calendars.get.each do |cal_obj|
-      cal = Calendar.new(cal_obj)
-      reporter = Reporter.new(cal)
-      reporter.csv_month(month)
+    config = load_config
+    config.map do |label, cals|
+      rows = cals.map do |cal_name|
+        reporter = setup_reporter(cal_name)
+        reporter.csv_month(month)
+      end
+      summary = rows.inject([0] * month.end_of_month.day) do |sum, row|
+        sum.zip(row).map do |pair|
+          pair[0] + pair[1]
+        end
+      end
+      print "#{label},"
+      puts summary.join(',')
     end
   end
 end
