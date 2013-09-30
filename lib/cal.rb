@@ -66,6 +66,7 @@ class Event
 
     rec_str = @obj.recurrence.get
     @rec = parse_recurrence(rec_str) unless rec_str == :missing_value
+    @excluded_dates = @obj.excluded_dates.get
 
     @week_start = Date.beginning_of_week
 
@@ -149,6 +150,8 @@ class Event
 
     # Check if it matches the time in the day
     adjusted_start_date = date.beginning_of_day + (start_date - start_date.beginning_of_day)
+    return nil if @excluded_dates && @excluded_dates.include?(adjusted_start_date)
+
     adjusted_end_date = adjusted_start_date + (end_date - start_date)
     (adjusted_start_date..adjusted_end_date)
   end
