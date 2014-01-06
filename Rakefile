@@ -38,10 +38,13 @@ namespace :report do
     puts (month..(month.end_of_month)).map { |date| date.strftime('%m-%d') }.join("\t")
 
     config = load_config
-    config.map do |label, cals|
+    config.each do |label, cals|
+      $stderr.puts "Started #{label}"
       rows = cals.map do |cal_name|
         reporter = setup_reporter(cal_name)
-        reporter.days_in_month(month)
+        row = reporter.days_in_month(month)
+        $stderr.puts "- #{cal_name}"
+        row
       end
       summary = rows.inject([0] * month.end_of_month.day) do |sum, row|
         sum.zip(row).map do |pair|
@@ -53,6 +56,8 @@ namespace :report do
 
       print "\"#{label}\"\t"
       puts summary.join("\t")
+      $stderr.puts "Finished #{label}"
     end
+    $stderr.puts 'Done.'
   end
 end
