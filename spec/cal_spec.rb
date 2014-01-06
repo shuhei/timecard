@@ -19,6 +19,7 @@ describe Event do
   let(:start_date) { Time.new(2013, 9, 4, 9) }
   let(:end_date) { Time.new(2013, 9, 4, 12) }
   let(:summary) { 'Test Event' }
+  let(:excluded_dates) { [] }
   subject { described_class.new(event_obj) }
 
   before do
@@ -26,6 +27,7 @@ describe Event do
     allow(event_obj).to receive(:recurrence).and_return(Container.new(reccurence_str))
     allow(event_obj).to receive(:start_date).and_return(Container.new(start_date))
     allow(event_obj).to receive(:end_date).and_return(Container.new(end_date))
+    allow(event_obj).to receive(:excluded_dates).and_return(Container.new(excluded_dates))
   end
 
   describe '#recurrent?' do
