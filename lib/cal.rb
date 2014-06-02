@@ -1,6 +1,7 @@
 require 'appscript'
 require 'active_support/time'
 
+# TODO: iCal responds too slowly. Try loading all events first and search on memory.
 class Calendar
   def initialize(obj)
     @obj = obj
