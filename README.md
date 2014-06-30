@@ -13,9 +13,9 @@ $ bundle install
 ## Usage
 
 ```
-$ rake report:monthly["Name of Calendar",2013/9]
-$ rake report:daily["Name of Calendar",2013/9/4]
-$ rake report:matrix[2013/9]
+$ bin/rake report:monthly["Name of Calendar",2013/9]
+$ bin/rake report:daily["Name of Calendar",2013/9/4]
+$ bin/rake report:matrix[2013/9]
 ```
 
 ## Test
