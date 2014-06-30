@@ -1,7 +1,8 @@
 require 'rspec/core/rake_task'
 require 'active_support/time'
 require 'yaml'
-require './lib/cal'
+require './lib/calendar'
+require './lib/report'
 
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.rspec_opts = ['-c']

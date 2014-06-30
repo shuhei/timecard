@@ -1,8 +1,6 @@
 require 'appscript'
 require_relative 'event'
 
-# TODO: iCal responds too slowly. Try loading all events first and search on memory.
-# event.properties_.get returns all the properties of the event.
 class Calendar
   def initialize(obj)
     @obj = obj
@@ -37,33 +35,5 @@ class Calendar
 
   def title
     @obj.title.get
-  end
-end
-
-class Reporter
-  def initialize(cal)
-    @cal = cal
-  end
-
-  def report_month(month)
-    (month..(month.end_of_month)).each do |date|
-      report_date(date)
-    end
-  end
-
-  def report_date(date)
-    events = @cal.events_in_date(date)
-
-    puts "#{date}: #{events.inject(0) { |sum, event| sum + event.duration_in_hours }} hours"
-    events.each do |event|
-      puts "  #{event.start_time} - #{event.end_time}: #{event.summary}"
-    end
-  end
-
-  def days_in_month(month)
-    (month..(month.end_of_month)).map do |date|
-      events = @cal.events_in_date(date)
-      sum = events.inject(0) { |sum, event| sum + event.duration_in_hours }
-    end
   end
 end

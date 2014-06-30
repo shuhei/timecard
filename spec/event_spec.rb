@@ -1,6 +1,6 @@
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
-require 'cal'
+require 'event'
 require 'active_support/time'
 
 class Container
@@ -228,11 +228,21 @@ describe Event do
 
   describe 'not supported events' do
     describe 'check overnight event' do
-      context 'with another end_date' do
+      context 'with another end_date and recurrence' do
         let(:end_date) { start_date + 1.day }
+        let(:recurrence_str) { 'FREQ=WEEKLY;INTERVAL=1' }
 
         it 'raises an error' do
           expect { subject }.to raise_error
+        end
+      end
+
+      context 'with another end_date and without recurrence' do
+        let(:end_date) { start_date + 1.day }
+        let(:recurrence_str) { :missing_value }
+
+        it 'does not raise an error' do
+          expect { subject }.not_to raise_error
         end
       end
 
