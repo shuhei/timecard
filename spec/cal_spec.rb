@@ -15,7 +15,7 @@ end
 
 describe Event do
   let(:event_obj) { double() }
-  let(:reccurence_str) { :missing_value }
+  let(:recurrence_str) { :missing_value }
   let(:start_date) { Time.new(2013, 9, 4, 9) }
   let(:end_date) { Time.new(2013, 9, 4, 12) }
   let(:summary) { 'Test Event' }
@@ -23,33 +23,36 @@ describe Event do
   subject { described_class.new(event_obj) }
 
   before do
-    allow(event_obj).to receive(:summary).and_return(Container.new(summary))
-    allow(event_obj).to receive(:recurrence).and_return(Container.new(reccurence_str))
-    allow(event_obj).to receive(:start_date).and_return(Container.new(start_date))
-    allow(event_obj).to receive(:end_date).and_return(Container.new(end_date))
-    allow(event_obj).to receive(:excluded_dates).and_return(Container.new(excluded_dates))
+    props = {
+      summary: summary,
+      recurrence: recurrence_str,
+      start_date: start_date,
+      end_date: end_date,
+      excluded_dates: excluded_dates
+    }
+    allow(event_obj).to receive(:properties_).and_return(Container.new(props))
   end
 
   describe '#recurrent?' do
     context 'without recurrence' do
-      let(:reccurence_str) { :missing_value }
+      let(:recurrence_str) { :missing_value }
       its(:recurrent?) { should be_false }
     end
 
     context 'with recurrence' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1' }
+      let(:recurrence_str) { 'FREQ=WEEKLY;INTERVAL=1' }
       its(:recurrent?) { should be_true }
     end
   end
 
   describe '#parse_recurrence' do
     context 'without recurrence' do
-      let(:reccurence_str) { :missing_value }
+      let(:recurrence_str) { :missing_value }
       its(:rec) { should be_nil }
     end
 
     context 'with recurrence' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TU,TH;WKST=MO;UNTIL=20130905T145959Z' }
+      let(:recurrence_str) { 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TU,TH;WKST=MO;UNTIL=20130905T145959Z' }
       it 'parses recurrence string' do
         expect(subject.rec['FREQ']).to eq('WEEKLY')
         expect(subject.rec['WKST']).to eq('MO')
@@ -80,7 +83,7 @@ describe Event do
     let(:date) { Date.new(2013, 9, 4) } # Wed
 
     context 'with daily event' do
-      let(:reccurence_str) { 'FREQ=DAILY;INTERVAL=1;UNTIL=20130918T145959Z' }
+      let(:recurrence_str) { 'FREQ=DAILY;INTERVAL=1;UNTIL=20130918T145959Z' }
 
       it 'returns true for the starting date' do
         expect(subject.check_recurrent(date)).to be_true
@@ -100,7 +103,7 @@ describe Event do
     end
 
     context 'with every-three-days event' do
-      let(:reccurence_str) { 'FREQ=DAILY;INTERVAL=3;UNTIL=20130919T145959Z' }
+      let(:recurrence_str) { 'FREQ=DAILY;INTERVAL=3;UNTIL=20130919T145959Z' }
 
       it 'returns true for the starting date' do
         expect(subject.check_recurrent(date)).to be_true
@@ -124,7 +127,7 @@ describe Event do
     end
 
     context 'with weekly event' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1;UNTIL=20130918T145959Z' }
+      let(:recurrence_str) { 'FREQ=WEEKLY;INTERVAL=1;UNTIL=20130918T145959Z' }
 
       it 'returns true for the starting date' do
         expect(subject.check_recurrent(date)).to be_true
@@ -148,7 +151,7 @@ describe Event do
     end
 
     context 'with weekly event that ends at the midnight' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1;UNTIL=20130918T145959Z' }
+      let(:recurrence_str) { 'FREQ=WEEKLY;INTERVAL=1;UNTIL=20130918T145959Z' }
       let(:end_date) { Time.new(2013, 9, 5, 0, 0, 0) }
 
       it 'returns true for the starting date' do
@@ -173,7 +176,7 @@ describe Event do
     end
 
     context 'with weekly event with byday' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,WE,SA' }
+      let(:recurrence_str) { 'FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,WE,SA' }
 
       it 'returns true for the starting date' do
         expect(subject.check_recurrent(date)).to be_true
@@ -203,7 +206,7 @@ describe Event do
     end
 
     context 'with biweekly event' do
-      let(:reccurence_str) { 'FREQ=WEEKLY;INTERVAL=2' }
+      let(:recurrence_str) { 'FREQ=WEEKLY;INTERVAL=2' }
 
       it 'returns true for the starting date' do
         expect(subject.check_recurrent(date)).to be_true
