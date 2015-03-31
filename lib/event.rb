@@ -27,7 +27,10 @@ class Event
 
     if @rec
       @week_start = DAY_SYMBOLS[@rec['WKST']] if DAY_SYMBOLS.has_key?(@rec['WKST'])
-      raise "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{summary}" unless ['DAILY', 'WEEKLY'].include?(@rec['FREQ'])
+      unless ['DAILY', 'WEEKLY'].include?(@rec['FREQ'])
+        message = "Only FREQ WEEKLY is supported but #{@rec['FREQ']} was given: #{@rec.inspect}"
+        raise message
+      end
     end
   end
 
